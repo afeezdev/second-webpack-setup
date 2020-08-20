@@ -1,14 +1,17 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const MinifyPlugin = require("babel-minify-webpack-plugin");
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const OptimizeCSSAssetsPlugin = require("optimize-css-assets-webpack-plugin");
 const webpack = require('webpack');
 const path = require('path');
 module.exports = {
   mode: "development",
   entry: "./src/index.js",
-  // output: {
-  //   path: __dirname + "/dist",
-  //   filename: "bundle.js",
-  // },
-  
+  optimization: {
+    minimizer: [
+      new OptimizeCSSAssetsPlugin()
+    ]
+  },
   devtool: "cheap-module-eval-source-map",
   devServer: {
     contentBase: path.join(__dirname, "dist"),
@@ -23,29 +26,45 @@ module.exports = {
       template: path.resolve("./src/index.html"),
     }),
     new webpack.HotModuleReplacementPlugin(),
-  ],
+  
+  new MiniCssExtractPlugin({
+    filename: "[name].css",
+    chunkFilename: "[id].css"
+  }),
+  new MinifyPlugin()
+],
   module: {
     rules: [
-     
-      // For SASS/SCSS
       {
-        test: /\.s[ac]ss$/i,
-        use: [
-          "style-loader",
-          "css-loader",
-          "sass-loader",
-        ],
+        test: /\.scss$/,
+        use: [MiniCssExtractPlugin.loader, "css-loader", "sass-loader"],
       },
-
-      // For Babel
       {
-        test: /\.js$/,
-        exclude: /node_modules/,
+        test: /\.m?js$/,
+        exclude: /(node_modules|bower_components)/,
         use: {
           loader: "babel-loader",
           options: {
             presets: ["@babel/preset-env"],
           },
+        },
+      },
+      {
+        test: /\.(jpg|jpeg|gif|png|svg|webp)$/,
+        use: [
+          {
+            loader: "file-loader",
+            options: {
+              outputPath: "./images",
+              name: "[name].[ext]",
+            },
+          },
+        ],
+      },
+      {
+        test: /\.html$/,
+        use: {
+          loader: "html-loader",
         },
       },
     ],
